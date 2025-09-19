@@ -1,4 +1,4 @@
-import {useEffect} from 'react';
+import React, {useEffect} from 'react';
 import {LLMClient, ProviderType} from '../../types/core.js';
 import {ToolManager} from '../../tools/tool-manager.js';
 import {CustomCommandLoader} from '../../custom-commands/loader.js';
@@ -9,30 +9,30 @@ import {
 	loadPreferences,
 	updateLastUsed,
 } from '../../config/preferences.js';
-import type {UserPreferences, MCPInitResult} from '../../types/index.js';
+import type {MCPInitResult, UserPreferences} from '../../types/index.js';
 import {
-	setToolRegistryGetter,
 	setToolManagerGetter,
+	setToolRegistryGetter,
 } from '../../message-handler.js';
 import {commandRegistry} from '../../commands.js';
 import {shouldLog} from '../../config/logging.js';
 import {appConfig} from '../../config/index.js';
 import {
-	helpCommand,
-	exitCommand,
 	clearCommand,
-	modelCommand,
-	providerCommand,
 	commandsCommand,
 	debugCommand,
-	mcpCommand,
+	exitCommand,
+	exportCommand,
+	helpCommand,
 	initCommand,
+	mcpCommand,
+	modelCommand,
+	providerCommand,
 	themeCommand,
 } from '../../commands/index.js';
 import SuccessMessage from '../../components/success-message.js';
 import ErrorMessage from '../../components/error-message.js';
 import InfoMessage from '../../components/info-message.js';
-import React from 'react';
 
 interface UseAppInitializationProps {
 	setClient: (client: LLMClient | null) => void;
@@ -247,6 +247,7 @@ export function useAppInitialization({
 				mcpCommand,
 				initCommand,
 				themeCommand,
+				exportCommand,
 			]);
 
 			// Now start with the properly initialized objects (excluding MCP)

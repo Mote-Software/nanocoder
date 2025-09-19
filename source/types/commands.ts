@@ -1,7 +1,9 @@
-export interface Command {
+import {Message} from './core.js';
+
+export interface Command<T = React.ReactElement> {
   name: string;
   description: string;
-  handler: (args: string[]) => void | string | Promise<void | string | React.ReactNode>;
+  handler: (args: string[], messages: Message[], metadata: {provider: string, model: string, tokens: number}) => Promise<T>;
 }
 
 export interface ParsedCommand {

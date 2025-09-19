@@ -26,8 +26,8 @@ import {useModeHandlers} from './app/hooks/useModeHandlers.js';
 import {useAppInitialization} from './app/hooks/useAppInitialization.js';
 import {useDirectoryTrust} from './app/hooks/useDirectoryTrust.js';
 import {
-	handleMessageSubmission,
 	createClearMessagesHandler,
+	handleMessageSubmission,
 } from './app/utils/appUtils.js';
 
 export default function App() {
@@ -168,6 +168,9 @@ export default function App() {
 				messages: appState.messages,
 				setIsBashExecuting: appState.setIsBashExecuting,
 				setCurrentBashCommand: appState.setCurrentBashCommand,
+				provider: appState.currentProvider,
+				model: appState.currentModel,
+				getMessageTokens: appState.getMessageTokens,
 			});
 		},
 		[

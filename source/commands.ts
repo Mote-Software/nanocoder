@@ -27,7 +27,11 @@ export class CommandRegistry {
 			.sort();
 	}
 
-	async execute(input: string): Promise<void | string | React.ReactNode> {
+	async execute(
+		input: string,
+		messages: import('./types/index.js').Message[],
+		metadata: {provider: string; model: string; tokens: number},
+	): Promise<void | string | React.ReactNode> {
 		const parts = input.trim().split(/\s+/);
 		const commandName = parts[0];
 		if (!commandName) {
@@ -49,7 +53,7 @@ export class CommandRegistry {
 			});
 		}
 
-		return await command.handler(args);
+		return await command.handler(args, messages, metadata);
 	}
 }
 

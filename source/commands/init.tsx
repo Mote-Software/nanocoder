@@ -1,7 +1,7 @@
 import {Command} from '../types/index.js';
 import React from 'react';
 import {TitledBox, titleStyles} from '@mishieck/ink-titled-box';
-import {Text, Box} from 'ink';
+import {Box, Text} from 'ink';
 import {colors} from '../config/index.js';
 import {useTerminalWidth} from '../hooks/useTerminalWidth.js';
 import ErrorMessage from '../components/error-message.js';
@@ -213,7 +213,7 @@ export const initCommand: Command = {
 	name: 'init',
 	description:
 		'Initialize nanocoder configuration and analyze project structure',
-	handler: async (_args: string[]) => {
+	handler: async (_args: string[], _messages, _metadata) => {
 		const cwd = process.cwd();
 		const created: string[] = [];
 

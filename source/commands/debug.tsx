@@ -2,7 +2,7 @@ import type {Command, LogLevel} from '../types/index.js';
 import {getLogLevel, setLogLevel} from '../config/logging.js';
 import React from 'react';
 import {TitledBox, titleStyles} from '@mishieck/ink-titled-box';
-import {Text, Box} from 'ink';
+import {Box, Text} from 'ink';
 import {useTerminalWidth} from '../hooks/useTerminalWidth.js';
 import {useTheme} from '../hooks/useTheme.js';
 import {getColors} from '../config/index.js';
@@ -135,7 +135,7 @@ function Debug({currentLevel, newLevel, action, invalidArg}: DebugProps) {
 export const debugCommand: Command = {
 	name: 'debug',
 	description: 'Toggle debug/verbose logging output',
-	handler: async (args: string[]) => {
+	handler: async (args: string[], _messages, _metadata) => {
 		const currentLevel = getLogLevel();
 
 		// If no argument provided, cycle through levels

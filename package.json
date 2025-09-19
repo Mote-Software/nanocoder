@@ -49,7 +49,7 @@
 		"@modelcontextprotocol/sdk": "^1.17.3",
 		"@nanostores/react": "^1.0.0",
 		"cli-highlight": "^2.1.11",
-		"ink": "^6.0.0",
+		"ink": "^6.3.1",
 		"ink-big-text": "^2.0.0",
 		"ink-gradient": "^3.0.0",
 		"ink-select-input": "^6.2.0",

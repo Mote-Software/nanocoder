@@ -5,7 +5,7 @@ import React from 'react';
 export const exitCommand: Command = {
 	name: 'exit',
 	description: 'Exit the application',
-	handler: async (_args: string[]) => {
+	handler: async (_args: string[], _messages, _metadata) => {
 		// Return InfoMessage component first, then exit after a short delay
 		setTimeout(() => {
 			process.exit(0);

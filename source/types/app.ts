@@ -17,6 +17,9 @@ export interface MessageSubmissionOptions {
 	messages: any[];
 	setIsBashExecuting: (executing: boolean) => void;
 	setCurrentBashCommand: (command: string) => void;
+	provider: string;
+	model: string;
+	getMessageTokens: (message: any) => number;
 }
 
 export interface ThinkingStats {

@@ -5,7 +5,7 @@ import path from 'path';
 import {fileURLToPath} from 'url';
 import React from 'react';
 import {TitledBox, titleStyles} from '@mishieck/ink-titled-box';
-import {Text, Box} from 'ink';
+import {Box, Text} from 'ink';
 import {useTerminalWidth} from '../hooks/useTerminalWidth.js';
 import {useTheme} from '../hooks/useTheme.js';
 
@@ -92,7 +92,7 @@ function Help({
 export const helpCommand: Command = {
 	name: 'help',
 	description: 'Show available commands',
-	handler: async (_args: string[]) => {
+	handler: async (_args: string[], _messages, _metadata) => {
 		const commands = commandRegistry.getAll();
 
 		return React.createElement(Help, {

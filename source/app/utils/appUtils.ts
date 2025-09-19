@@ -148,7 +148,15 @@ ${result.fullOutput || '(No output)'}`;
 			}
 
 			// Execute built-in command
-			const result = await commandRegistry.execute(message.slice(1)); // Remove the leading '/'
+			const totalTokens = messages.reduce(
+				(sum, msg) => sum + options.getMessageTokens(msg),
+				0,
+			);
+			const result = await commandRegistry.execute(message.slice(1), messages, {
+				provider: options.provider,
+				model: options.model,
+				tokens: totalTokens,
+			});
 			if (result) {
 				// Check if result is JSX (React element)
 				if (React.isValidElement(result)) {
