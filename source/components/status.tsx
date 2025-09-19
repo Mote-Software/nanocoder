@@ -1,5 +1,5 @@
 import {Text} from 'ink';
-import {memo, useState, useEffect} from 'react';
+import {memo, useEffect, useState} from 'react';
 import {existsSync} from 'fs';
 
 import {useTheme} from '../hooks/useTheme.js';
@@ -83,16 +83,17 @@ export default memo(function Status({
 				</Text>
 			)}
 			{updateInfo?.hasUpdate && (
-				<Text color={colors.warning}>
-					<Text bold={true}>Update Available: </Text>v
-					{updateInfo.currentVersion} → v{updateInfo.latestVersion}
+				<>
+					<Text color={colors.warning}>
+						<Text bold={true}>Update Available: </Text>v
+						{updateInfo.currentVersion} → v{updateInfo.latestVersion}
+					</Text>
 					{updateInfo.updateCommand && (
 						<Text color={colors.secondary}>
-							{' '}
-							(Run: {updateInfo.updateCommand})
+							↳ Run: /update or {updateInfo.updateCommand}
 						</Text>
 					)}
-				</Text>
+				</>
 			)}
 		</TitledBox>
 	);
