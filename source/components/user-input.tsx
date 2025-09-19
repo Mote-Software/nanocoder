@@ -1,9 +1,13 @@
-import {Box, Text, useInput, useFocus} from 'ink';
-import {useState, useEffect, useCallback, useRef} from 'react';
+import {Box, Text, useFocus, useInput} from 'ink';
+import TextInput from 'ink-text-input';
+import {useCallback, useEffect} from 'react';
 import {useTheme} from '../hooks/useTheme.js';
 import {promptHistory} from '../prompt-history.js';
 import {commandRegistry} from '../commands.js';
 import {useTerminalWidth} from '../hooks/useTerminalWidth.js';
+import {useUIStateContext} from '../hooks/useUIState.js';
+import {useInputState} from '../hooks/useInputState.js';
+import {Completion} from '../types/index.js';
 
 interface ChatProps {
 	onSubmit?: (message: string) => void;
@@ -13,88 +17,6 @@ interface ChatProps {
 	onCancel?: () => void; // Callback when user presses escape while thinking
 }
 
-// Types for better organization
-type Completion = {name: string; isCustom: boolean};
-
-// Custom hooks
-function useInputState() {
-	const [input, setInput] = useState('');
-	const [hasLargeContent, setHasLargeContent] = useState(false);
-	const [originalInput, setOriginalInput] = useState('');
-	const [historyIndex, setHistoryIndex] = useState(-1);
-	const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-	const [cachedLineCount, setCachedLineCount] = useState(1);
-
-	// Cache the line count
-	const updateInput = useCallback((newInput: string) => {
-		setInput(newInput);
-		
-		debounceTimerRef.current = setTimeout(() => {
-			setHasLargeContent(newInput.length > 150);
-			// Cache line count calculation
-			if (newInput.length > 150) {
-				const lineCount = Math.max(
-					newInput.split('\n').length,
-					newInput.split('\r').length,
-				);
-				setCachedLineCount(lineCount);
-			}
-		}, 50);
-	}, []);
-
-	const resetInput = useCallback(() => {
-		// Clear any pending debounce timer
-		if (debounceTimerRef.current) {
-			clearTimeout(debounceTimerRef.current);
-			debounceTimerRef.current = null;
-		}
-		setInput('');
-		setHasLargeContent(false);
-		setOriginalInput('');
-		setHistoryIndex(-1);
-	}, []);
-
-	return {
-		input,
-		hasLargeContent,
-		originalInput,
-		historyIndex,
-		setInput,
-		setHasLargeContent,
-		setOriginalInput,
-		setHistoryIndex,
-		updateInput,
-		resetInput,
-	};
-}
-
-function useUIState() {
-	const [showClearMessage, setShowClearMessage] = useState(false);
-	const [showFullContent, setShowFullContent] = useState(false);
-	const [showCompletions, setShowCompletions] = useState(false);
-	const [completions, setCompletions] = useState<Completion[]>([]);
-
-	const resetUIState = useCallback(() => {
-		setShowClearMessage(false);
-		setShowFullContent(false);
-		setShowCompletions(false);
-		setCompletions([]);
-	}, []);
-
-	return {
-		showClearMessage,
-		showFullContent,
-		showCompletions,
-		completions,
-		setShowClearMessage,
-		setShowFullContent,
-		setShowCompletions,
-		setCompletions,
-		resetUIState,
-	};
-}
-
 export default function UserInput({
 	onSubmit,
 	placeholder = 'Type `/` and then press Tab for command suggestions or `!` to execute bash commands. Use ↑/↓ for history.',
@@ -102,10 +24,10 @@ export default function UserInput({
 	disabled = false,
 	onCancel,
 }: ChatProps) {
-	const {isFocused} = useFocus({autoFocus: !disabled});
+	const {isFocused, focus} = useFocus({autoFocus: !disabled, id: 'user-input'});
 	const {colors} = useTheme();
 	const inputState = useInputState();
-	const uiState = useUIState();
+	const uiState = useUIStateContext();
 	const boxWidth = useTerminalWidth();
 
 	const {
@@ -117,6 +39,7 @@ export default function UserInput({
 		setHistoryIndex,
 		updateInput,
 		resetInput,
+		cachedLineCount,
 	} = inputState;
 
 	const {
@@ -186,10 +109,11 @@ export default function UserInput({
 		if (showClearMessage) {
 			resetInput();
 			resetUIState();
+			focus('user-input');
 		} else {
 			setShowClearMessage(true);
 		}
-	}, [showClearMessage, resetInput, resetUIState, setShowClearMessage]);
+	}, [showClearMessage, resetInput, resetUIState, setShowClearMessage, focus]);
 
 	// History navigation
 	const handleHistoryNavigation = useCallback(
@@ -273,16 +197,12 @@ export default function UserInput({
 		}
 		if (showClearMessage) {
 			setShowClearMessage(false);
+			focus('user-input');
 		}
 
 		// Handle return keys
 		if (key.return && key.shift) {
 			updateInput(input + '\n');
-			return;
-		}
-
-		if (key.return) {
-			handleSubmit();
 			return;
 		}
 
@@ -296,25 +216,6 @@ export default function UserInput({
 			handleHistoryNavigation('down');
 			return;
 		}
-
-		// Handle deletion
-		if (key.backspace || key.delete) {
-			const newInput = input.slice(0, -1);
-			updateInput(newInput);
-			return;
-		}
-
-		// Handle character input
-		if (inputChar) {
-			// Normalize line endings and tabs for pasted content
-			let normalizedChar = inputChar;
-			if (inputChar.includes('\r') || inputChar.includes('\n')) {
-				normalizedChar = inputChar.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-			}
-			// Convert tabs to 2 spaces for more compact display
-			normalizedChar = normalizedChar.replace(/\t/g, '  ');
-			updateInput(input + normalizedChar);
-		}
 	});
 
 	// Render function - NEVER modifies state, only for display
@@ -322,15 +223,10 @@ export default function UserInput({
 		if (!input) return placeholder;
 
 		if (hasLargeContent && input.length > 150 && !showFullContent) {
-			// Count lines properly - handle both \n and \r line endings
-			const lineCount = Math.max(
-				input.split('\n').length,
-				input.split('\r').length,
-			);
-
+			// Use cached line count from the hook (debounced)
 			return (
 				<>
-					{`[${input.length} characters, ${lineCount} lines] `}
+					{`[${input.length} characters, ${cachedLineCount} lines] `}
 					<Text color={colors.secondary}>({getExpandKey()} to expand)</Text>
 				</>
 			);
@@ -338,6 +234,8 @@ export default function UserInput({
 
 		return input;
 	};
+
+	const textColor = disabled || !input ? colors.secondary : colors.primary;
 
 	return (
 		<Box flexDirection="column" paddingY={1} width="100%" marginTop={1}>
@@ -358,22 +256,28 @@ export default function UserInput({
 					</>
 				)}
 
-				<Text
-					color={
-						disabled
-							? colors.secondary
-							: input
-							? colors.white
-							: colors.secondary
-					}
-				>
-					{'>'} {disabled ? '...' : renderDisplayContent()}
-					{!disabled && input && isFocused && (
-						<Text backgroundColor={colors.white} color={colors.black}>
-							{' '}
-						</Text>
-					)}
-				</Text>
+				{/* Input row */}
+				{hasLargeContent && input.length > 150 && !showFullContent ? (
+					<Text color={textColor}>
+						{'>'} {renderDisplayContent()}
+					</Text>
+				) : (
+					<Box>
+						<Text color={textColor}>{'>'} </Text>
+						{disabled ? (
+							<Text color={colors.secondary}>...</Text>
+						) : (
+							<TextInput
+								value={input}
+								onChange={updateInput}
+								onSubmit={handleSubmit}
+								placeholder={placeholder}
+								focus={isFocused}
+							/>
+						)}
+					</Box>
+				)}
+
 				{isBashMode && (
 					<Text color={colors.tool} dimColor>
 						Bash Mode

@@ -54,6 +54,7 @@
 		"ink-gradient": "^3.0.0",
 		"ink-select-input": "^6.2.0",
 		"ink-spinner": "^5.0.0",
+		"ink-text-input": "^6.0.0",
 		"meow": "^11.0.0",
 		"nanostores": "^1.0.1",
 		"ollama": "^0.5.17",
@@ -61,6 +62,7 @@
 	},
 	"devDependencies": {
 		"@sindresorhus/tsconfig": "^3.0.1",
+		"@types/ink-text-input": "^2.0.5",
 		"@types/node": "^24.3.0",
 		"@types/react": "^19.0.0",
 		"@vdemedes/prettier-config": "^2.0.1",

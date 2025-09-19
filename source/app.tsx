@@ -26,9 +26,12 @@ import {useModeHandlers} from './app/hooks/useModeHandlers.js';
 import {useAppInitialization} from './app/hooks/useAppInitialization.js';
 import {useDirectoryTrust} from './app/hooks/useDirectoryTrust.js';
 import {
-	handleMessageSubmission,
 	createClearMessagesHandler,
+	handleMessageSubmission,
 } from './app/utils/appUtils.js';
+
+// Provide shared UI state to components
+import {UIStateProvider} from './hooks/useUIState.js';
 
 export default function App() {
 	// Use extracted hooks
@@ -233,88 +236,94 @@ export default function App() {
 
 	return (
 		<ThemeContext.Provider value={themeContextValue}>
-			<Box flexDirection="column" padding={1} width="100%">
-				<Box flexGrow={1} flexDirection="column" minHeight={0}>
-					<WelcomeMessage />
-					{appState.startChat && (
-						<ChatQueue
-							staticComponents={staticComponents}
-							queuedComponents={appState.chatComponents}
-						/>
-					)}
-				</Box>
-				{appState.startChat && (
-					<Box flexDirection="column">
-						{appState.isCancelling ? (
-							<CancellingIndicator />
-						) : appState.isThinking ? (
-							<ThinkingIndicator
-								contextSize={appState.thinkingStats.contextSize}
-								totalTokensUsed={appState.thinkingStats.totalTokensUsed}
-								tokensPerSecond={appState.thinkingStats.tokensPerSecond}
+			<UIStateProvider>
+				<Box flexDirection="column" padding={1} width="100%">
+					<Box flexGrow={1} flexDirection="column" minHeight={0}>
+						<WelcomeMessage />
+						{appState.startChat && (
+							<ChatQueue
+								staticComponents={staticComponents}
+								queuedComponents={appState.chatComponents}
 							/>
-						) : null}
-						{appState.isModelSelectionMode ? (
-							<ModelSelector
-								client={appState.client}
-								currentModel={appState.currentModel}
-								onModelSelect={modeHandlers.handleModelSelect}
-								onCancel={modeHandlers.handleModelSelectionCancel}
-							/>
-						) : appState.isProviderSelectionMode ? (
-							<ProviderSelector
-								currentProvider={appState.currentProvider}
-								onProviderSelect={modeHandlers.handleProviderSelect}
-								onCancel={modeHandlers.handleProviderSelectionCancel}
-							/>
-						) : appState.isThemeSelectionMode ? (
-							<ThemeSelector
-								onThemeSelect={modeHandlers.handleThemeSelect}
-								onCancel={modeHandlers.handleThemeSelectionCancel}
-							/>
-						) : appState.isToolConfirmationMode &&
-						  appState.pendingToolCalls[appState.currentToolIndex] ? (
-							<ToolConfirmation
-								toolCall={appState.pendingToolCalls[appState.currentToolIndex]}
-								onConfirm={toolHandler.handleToolConfirmation}
-								onCancel={toolHandler.handleToolConfirmationCancel}
-							/>
-						) : appState.isToolExecuting &&
-						  appState.pendingToolCalls[appState.currentToolIndex] ? (
-							<ToolExecutionIndicator
-								toolName={
-									appState.pendingToolCalls[appState.currentToolIndex].function
-										.name
-								}
-								currentIndex={appState.currentToolIndex}
-								totalTools={appState.pendingToolCalls.length}
-							/>
-						) : appState.isBashExecuting ? (
-							<BashExecutionIndicator command={appState.currentBashCommand} />
-						) : appState.mcpInitialized && appState.client ? (
-							<UserInput
-								customCommands={Array.from(appState.customCommandCache.keys())}
-								onSubmit={handleMessageSubmit}
-								disabled={
-									appState.isThinking ||
-									appState.isToolExecuting ||
-									appState.isBashExecuting
-								}
-								onCancel={handleCancel}
-							/>
-						) : appState.mcpInitialized && !appState.client ? (
-							<Text color={themeContextValue.colors.secondary}>
-								⚠️ No LLM provider available. Chat is disabled. Please fix your
-								provider configuration and restart.
-							</Text>
-						) : (
-							<Text color={themeContextValue.colors.secondary}>
-								<Spinner type="dots2" /> Loading...
-							</Text>
 						)}
 					</Box>
-				)}
-			</Box>
+					{appState.startChat && (
+						<Box flexDirection="column">
+							{appState.isCancelling ? (
+								<CancellingIndicator />
+							) : appState.isThinking ? (
+								<ThinkingIndicator
+									contextSize={appState.thinkingStats.contextSize}
+									totalTokensUsed={appState.thinkingStats.totalTokensUsed}
+									tokensPerSecond={appState.thinkingStats.tokensPerSecond}
+								/>
+							) : null}
+							{appState.isModelSelectionMode ? (
+								<ModelSelector
+									client={appState.client}
+									currentModel={appState.currentModel}
+									onModelSelect={modeHandlers.handleModelSelect}
+									onCancel={modeHandlers.handleModelSelectionCancel}
+								/>
+							) : appState.isProviderSelectionMode ? (
+								<ProviderSelector
+									currentProvider={appState.currentProvider}
+									onProviderSelect={modeHandlers.handleProviderSelect}
+									onCancel={modeHandlers.handleProviderSelectionCancel}
+								/>
+							) : appState.isThemeSelectionMode ? (
+								<ThemeSelector
+									onThemeSelect={modeHandlers.handleThemeSelect}
+									onCancel={modeHandlers.handleThemeSelectionCancel}
+								/>
+							) : appState.isToolConfirmationMode &&
+							  appState.pendingToolCalls[appState.currentToolIndex] ? (
+								<ToolConfirmation
+									toolCall={
+										appState.pendingToolCalls[appState.currentToolIndex]
+									}
+									onConfirm={toolHandler.handleToolConfirmation}
+									onCancel={toolHandler.handleToolConfirmationCancel}
+								/>
+							) : appState.isToolExecuting &&
+							  appState.pendingToolCalls[appState.currentToolIndex] ? (
+								<ToolExecutionIndicator
+									toolName={
+										appState.pendingToolCalls[appState.currentToolIndex]
+											.function.name
+									}
+									currentIndex={appState.currentToolIndex}
+									totalTools={appState.pendingToolCalls.length}
+								/>
+							) : appState.isBashExecuting ? (
+								<BashExecutionIndicator command={appState.currentBashCommand} />
+							) : appState.mcpInitialized && appState.client ? (
+								<UserInput
+									customCommands={Array.from(
+										appState.customCommandCache.keys(),
+									)}
+									onSubmit={handleMessageSubmit}
+									disabled={
+										appState.isThinking ||
+										appState.isToolExecuting ||
+										appState.isBashExecuting
+									}
+									onCancel={handleCancel}
+								/>
+							) : appState.mcpInitialized && !appState.client ? (
+								<Text color={themeContextValue.colors.secondary}>
+									⚠️ No LLM provider available. Chat is disabled. Please fix
+									your provider configuration and restart.
+								</Text>
+							) : (
+								<Text color={themeContextValue.colors.secondary}>
+									<Spinner type="dots2" /> Loading...
+								</Text>
+							)}
+						</Box>
+					)}
+				</Box>
+			</UIStateProvider>
 		</ThemeContext.Provider>
 	);
 }
